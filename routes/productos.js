@@ -1,43 +1,38 @@
 const router = require('express').Router()
+const crud = require('./crud')
 
-const productos = []
+const newProduct = new crud()
+
 
 function existence(req, res, next) {
-    productos.length > 0 ? next() : res.send("No hay productos en existencia")
+    newProduct.existence() ? next() : res.send("No hay productos en existencia")
 }
+
 function getId(req, res, next) {
-    const len = productos.length
-    if (len > 0) {
-        req.body.id = len + 1
-        
-    } else {
-        req.body.id = 1
-    }
+    req.body.id = newProduct.getId()
     next()
 }
 
+function existProduct(req, res, next) {
+    newProduct.existProduct(req.params.id) ? next() : res.send("Error: No existe el producto")
+}
 
 router.get('/', existence, (req, res) => {
-    res.send({ productos })
+    res.send(newProduct.getAll())
 })
 
-router.get('/:id', (req, res) => {
-    const id = req.params.id
-    const product = productos.find(producto => producto.id == id)
-    product ? res.send(product) : res.send("Error: el Producto no existe")
+router.get('/:id', existence, existProduct, (req, res) => {
+    res.send(newProduct.getById(req.params.id))
 })
 
 router.post('/', getId, (req, res) => {
-    productos.push(req.body)
-    console.log(productos);
-    res.send(`El id asignado es: ${req.body.id}`)
+    res.send(newProduct.createProduct(req.body))
 })
-router.put('/:id', existence, (req, res)=>{
-    const id = req.params.id
-    const product = productos.find(producto => producto.id == id)
-    
-
+router.put('/:id', existence, existProduct, (req, res) => {
+    res.send(newProduct.updateProduct(req.body, req.params.id))
 })
-
+router.delete('/:id', existence, existProduct, (req, res) => {
+    res.send(newProduct.deleteProduct(req.params.id))
+})
 
 module.exports = router;
